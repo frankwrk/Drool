@@ -205,6 +205,3 @@ function Logo(target_element,is_looping)
     }
   }
 }
-
-var logo = new Logo(document.getElementById("logo"),true);
-logo.install();
