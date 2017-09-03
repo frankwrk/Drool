@@ -5,7 +5,8 @@ function Logo(is_looping)
   var is_looping = is_looping;
 
   this.canvas = null;
-  this.size = null
+  this.size = null;
+  this.is_playing = true;
 
   this.install = function(target_canvas,size)
   {
@@ -14,6 +15,7 @@ function Logo(is_looping)
 
     this.create_tiles();
     animate();
+    this.draw(true);
 
     var timer = setInterval(this.draw, 30);
   }
@@ -28,8 +30,18 @@ function Logo(is_looping)
     this.context().clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
-  this.draw = function()
+  this.stop = function()
   {
+    if(logo.is_playing == false){ return; }
+
+    setTimeout(function(){ logo.draw(true); }, 50);
+    this.is_playing = false;
+  }
+
+  this.draw = function(override = false)
+  {
+    if(override == false && !tiles_still_moving()){ logo.stop(); return; }
+
     logo.clear();
     var offset = 200;
     for (i = 0; i < tiles.length; i++) { 
@@ -83,6 +95,15 @@ function Logo(is_looping)
     if(id == 100){ return; }
     tiles[id].animate_until(tiles[id].history[step]);
     setTimeout(function(){ animate_to(step,id+1); }, 10);
+  }
+
+  function tiles_still_moving()
+  {
+    for (i = 0; i < tiles.length; i++) { 
+      var tile = tiles[i];
+      if(tile.offset().x != 0 || tile.offset().y != 0){ logo.is_playing = true; return true; }
+    }
+    return false;
   }
 
   function animate()
@@ -156,6 +177,13 @@ function Logo(is_looping)
     this.update = function()
     {
       this.el_pos = {x:pos.x * this.size,y:pos.y * this.size};
+    }
+
+    this.offset = function()
+    {
+      if(!this.target_pos){ return {x:0,y:0}; }
+      var target_el_pos = {x:this.target_pos.x * this.size,y:this.target_pos.y * this.size};
+      return {x:target_el_pos.x - this.el_pos.x,y:target_el_pos.y - this.el_pos.y};
     }
 
     this.neighboor_left = function(){ return tile_at({x:pos.x-1,y:pos.y},tiles); }
