@@ -1,9 +1,11 @@
 <body style='background:black'>
-  <div id='logo' style='width:120px;height:120px; margin:25vh auto'>
-  </div>
+  <canvas id='logo' style='margin:25vh auto; display:block; width:300px; height:300px' width='600' height='600'></canvas>
   <script type="text/javascript" charset="utf-8" src="scripts/logo.js"></script>
   <script>
-    var logo = new Logo(document.getElementById("logo"),true);
-    logo.install();
+    var logo = new Logo(true);
+    logo.install(document.getElementById("logo"),120);
   </script>
+  <style>
+  tile { background-color: white; display: block; border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; position: absolute;}
+  </style>
 </body>

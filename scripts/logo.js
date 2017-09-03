@@ -1,13 +1,22 @@
 // Drool.
 
-function Logo(target_element,is_looping)
+function Logo(is_looping)
 {
   var is_looping = is_looping;
-  this.element = target_element;
-  this.container = document.createElement("div");
 
-  this.width = parseInt(this.element.style.width, 10);
-  this.height = parseInt(this.element.style.height, 10);
+  this.canvas = null;
+  this.size = null
+
+  this.install = function(target_canvas,size)
+  {
+    this.canvas = target_canvas;
+    this.size = size;
+
+    this.create_tiles();
+    animate();
+
+    var timer = setInterval(this.draw, 30);
+  }
 
   function Pos(x,y)
   {
@@ -21,18 +30,9 @@ function Logo(target_element,is_looping)
   {
     for (x = 0; x < 10; x++) { 
       for (y = 0; y < 10; y++) { 
-        var rand_x = 15 - Math.floor((Math.random() * 20) + 1);
-        var rand_y = 15 - Math.floor((Math.random() * 20) + 1);
         var pos = new Pos(x,y);
-        tiles.push(new Tile(pos));  
+        tiles.push(new Tile(pos,this.size/5));  
       }
-    }
-  }
-
-  this.install_tiles = function()
-  {
-    for (t = 0; t < tiles.length; t++) { 
-      tiles[t].install();
     }
   }
 
@@ -56,9 +56,32 @@ function Logo(target_element,is_looping)
   function animate_return_to(step,id)
   {
     if(id == -1){ return; }
-    animate_tile(tiles[id],20);
-    tiles[id].move_to(tiles[id].history[step]);
+    tiles[id].animate_until(tiles[id].history[step]);
     setTimeout(function(){ animate_return_to(step,id-1); }, 10);
+  }
+
+  this.context = function()
+  {
+    return this.canvas.getContext('2d');
+  }
+
+  this.clear = function()
+  {
+    this.context().clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
+  this.draw = function()
+  {
+    logo.clear();
+    var offset = 200;
+    for (i = 0; i < tiles.length; i++) { 
+      var tile = tiles[i];
+      logo.context().beginPath();
+      logo.context().arc(tile.el_pos.x + offset,tile.el_pos.y + offset, (tile.size/2)-2, 0, 2 * Math.PI, false);
+      logo.context().fillStyle = "white";
+      logo.context().fill();
+      logo.context().closePath();
+    }
   }
 
   function animate_to(step,id)
@@ -72,25 +95,11 @@ function Logo(target_element,is_looping)
   function animate_tile(tile,count)
   {
     if(count == 0){ return; }
-    if(parseInt(tile.element.style.left,10) < (tile.pos.x * tile.tile_size)){ tile.translate_with(1,0); }
-    if(parseInt(tile.element.style.left,10) > (tile.pos.x * tile.tile_size)){ tile.translate_with(-1,0); }
-    if(parseInt(tile.element.style.top,10) < (tile.pos.y * tile.tile_size)){ tile.translate_with(0,1); }
-    if(parseInt(tile.element.style.top,10) > (tile.pos.y * tile.tile_size)){ tile.translate_with(0,-1); }
+    if(tile.el_pos.x < (tile.pos.x * tile.size)){ tile.translate_with(1,0); }
+    if(tile.el_pos.x > (tile.pos.x * tile.size)){ tile.translate_with(-1,0); }
+    if(tile.el_pos.y < (tile.pos.y * tile.size)){ tile.translate_with(0,1); }
+    if(tile.el_pos.y > (tile.pos.y * tile.size)){ tile.translate_with(0,-1); }
     setTimeout(function(){ animate_tile(tile,count-1); }, 1);
-  }
-
-  this.install = function()
-  {
-    this.element.style.backgroundColor = "black";
-    this.element.style.padding = (logo.width/2)+"px";
-    this.container.style.width = logo.width+"px";
-    this.container.style.height = logo.height+"px";
-    this.container.style.position = "relative";
-    this.element.appendChild(this.container);
-
-    this.create_tiles();
-    this.install_tiles();
-    animate();
   }
 
   function animate()
@@ -98,11 +107,12 @@ function Logo(target_element,is_looping)
     scare_tiles(6);
     return_tiles_to(5);
 
-    setTimeout(function(){ animate_return_to(4,99); }, 1500);
-    setTimeout(function(){ animate_return_to(3,99); }, 2000);
-    setTimeout(function(){ animate_return_to(2,99); }, 2500);
-    setTimeout(function(){ animate_return_to(1,99); }, 3000);
+    setTimeout(function(){ animate_return_to(4,99); }, 1000);
+    setTimeout(function(){ animate_return_to(3,99); }, 1600);
+    setTimeout(function(){ animate_return_to(2,99); }, 2200);
+    setTimeout(function(){ animate_return_to(1,99); }, 2800);
 
+    return;
     if(is_looping == true){
       setTimeout(function(){ scare_tiles(6); }, 6000);
       setTimeout(function(){ return_tiles_to(1); }, 6000);
@@ -118,27 +128,13 @@ function Logo(target_element,is_looping)
 
   // Generate
 
-  function Tile(pos)
+  function Tile(pos,size)
   {
     this.pos = pos;
-    this.element = null;
-    this.tile_size = logo.width/10;
+    this.size = size;
+    this.el_pos = {x:this.pos.x * this.size,y:this.pos.y * this.size};
     this.history = [];
     this.history.push(new Pos(this.pos.x,this.pos.y));   
-
-    this.install = function()
-    {
-      this.element = document.createElement("tile");
-      this.element.style.backgroundColor = 'white';
-      this.element.style.width = (logo.width * 0.08)+'px';
-      this.element.style.height = (logo.width * 0.08)+'px';
-      this.element.style.display = 'block';
-      this.element.style.borderRadius = '10px';
-      this.element.style.position = 'absolute';
-      this.element.style.left = (this.pos.x * this.tile_size)+'px';
-      this.element.style.top = (this.pos.y * this.tile_size)+'px';
-      logo.container.appendChild(this.element);
-    };
 
     function tile_at(target_pos,neighboors)
     {
@@ -155,16 +151,37 @@ function Logo(target_element,is_looping)
       this.pos.x = target_pos.x;
       this.pos.y = target_pos.y;
     }
+
+    var target_pos = null;
+
+    this.animate_until = function(target_pos)
+    {
+      this.target_pos = target_pos;
+
+      var target_el_pos = {x:target_pos.x * this.size,y:target_pos.y * this.size};
+
+      var to_move = {x:target_el_pos.x - this.el_pos.x,y:target_el_pos.y - this.el_pos.y};
+
+      if(to_move.x > 0){ this.el_pos.x += 1; }
+      else if(to_move.x < 0){ this.el_pos.x -= 1; }
+      if(to_move.y > 0){ this.el_pos.y += 1; }
+      else if(to_move.y < 0){ this.el_pos.y -= 1; }
+
+      if(target_el_pos.x != this.el_pos.x || target_el_pos.y != this.el_pos.y){
+        var target = this;
+        setTimeout(function(){ target.animate_until(target_pos); }, 5);
+      }
+    }
+
     this.translate_with = function(x,y)
     {
-      this.element.style.left = (parseInt(this.element.style.left, 10)+x)+'px';
-      this.element.style.top = (parseInt(this.element.style.top, 10)+y)+'px';
+      this.el_pos.x += x;
+      this.el_pos.y += y;
     }
 
     this.update = function()
     {
-      this.element.style.left = (pos.x * this.tile_size)+'px';
-      this.element.style.top = (pos.y * this.tile_size)+'px';
+      this.el_pos = {x:pos.x * this.size,y:pos.y * this.size};
     }
 
     this.neighboor_left = function()
